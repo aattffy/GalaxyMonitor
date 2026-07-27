@@ -1,0 +1,121 @@
+Voltage_Guardian_V2
+سكربت مراقب الفولتيه بالسوتشات وارسال تنبيهات للتلجرام 
+سكربت ذكي موحد يرسل في وضعية 3 حالات 
+
+
+# ==============================================================================
+# System Name: Voltage Guardian V2
+# Description: Unified Voltage Monitoring with Telegram Alerts
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# SECTION 1: Telegram Configuration
+# ------------------------------------------------------------------------------
+:local botToken "5273707582:AAH3dKXvBxSd_7Ybp7q35NIaVlkiFFFRB8k"
+:local chatId   "-1001888595677"
+
+# ------------------------------------------------------------------------------
+# SECTION 2: Read Voltage & System Info
+# ------------------------------------------------------------------------------
+:local Voltage [/system health get voltage]
+:local Device  [/system identity get name]
+:local Date    [/system clock get date]
+:local Time    [/system clock get time]
+
+# ------------------------------------------------------------------------------
+# SECTION 3: Persistent State Variables (Environment)
+# ------------------------------------------------------------------------------
+:global VGLastState
+:global VGLastSendTime
+
+:if ([:typeof $VGLastState] = "nothing") do={ :set VGLastState "NORMAL" }
+:if ([:typeof $VGLastSendTime] = "nothing") do={ :set VGLastSendTime 0 }
+
+# Local Variables
+:local currentState ""
+:local cooldownMinutes 0
+:local sendMsg false
+:local alertHeader ""
+:local alertBody ""
+
+# ------------------------------------------------------------------------------
+# SECTION 4: Logic & State Determination
+# ------------------------------------------------------------------------------
+:if ($Voltage >= 130) do={
+    :set currentState "NORMAL"
+} else={
+    :if ($Voltage >= 125) do={
+        :set currentState "NORMAL_LOW"
+        :set cooldownMinutes 10
+    } else={
+        :if ($Voltage >= 118) do={
+            :set currentState "WARNING"
+            :set cooldownMinutes 5
+        } else={
+            :set currentState "CRITICAL"
+            :set cooldownMinutes 1
+        }
+    }
+}
+
+# ------------------------------------------------------------------------------
+# SECTION 5: Cooldown & Transition Engine
+# ------------------------------------------------------------------------------
+:if ($currentState = "NORMAL") do={
+    # Send Recovery message ONLY if returning from a low voltage state
+    :if ($VGLastState != "NORMAL") do={
+        :set sendMsg true
+        :set alertHeader "🟢 تعافي النظام - عودة الفولتية"
+        :set alertBody "⚠️ الحالة : عادت الفولتية للوضع الطبيعي.%0D%0A✅ يرجى الاطمئنان."
+        :set VGLastState "NORMAL"
+    }
+} else={
+    # If state changed (e.g. dropped from Normal_Low to Warning), send immediately
+    :if ($currentState != $VGLastState) do={
+        :set sendMsg true
+        :set VGLastState $currentState
+        :set VGLastSendTime 0
+    } else={
+        # If state is same, check cooldown timer
+        :set VGLastSendTime ($VGLastSendTime + 1)
+        :if ($VGLastSendTime >= $cooldownMinutes) do={
+            :set sendMsg true
+            :set VGLastSendTime 0
+        }
+    }
+
+    # Prepare specific text for active alert level
+    :if ($sendMsg = true) do={
+        :if ($currentState = "NORMAL_LOW") do={
+            :set alertHeader "🟡 تنبيه عادي - انخفاض الفولتية"
+            :set alertBody "⚠️ الحالة : انخفاض بسيط بالفولتية.%0D%0A💡 يفضل متابعة البطارية."
+        }
+        :if ($currentState = "WARNING") do={
+            :set alertHeader "🟠 تنبيه مهم - انخفاض ملحوظ"
+            :set alertBody "⚠️ الحالة : البطارية تصرف بشكل أسرع.%0D%0A🛠️ يرجى فحص مصدر التغذية قريباً."
+        }
+        :if ($currentState = "CRITICAL") do={
+            :set alertHeader "🔴 إنذار حرج - مستوى خطر"
+            :set alertBody "🚨 الحالة : الفولتية حرجة جداً!%0D%0A⚡ قد يتوقف الجهاز أو يعاد تشغيله في أي لحظة."
+        }
+    }
+}
+
+# ------------------------------------------------------------------------------
+# SECTION 6: Build & Send Telegram Notification
+# ------------------------------------------------------------------------------
+:if ($sendMsg = true) do={
+    :local Msg ($alertHeader."%0D%0A")
+    :set Msg ($Msg."━━━━━━━━━━━━━━%0D%0A")
+    :set Msg ($Msg."📡 الجهاز : ".$Device."%0D%0A")
+    :set Msg ($Msg."🔋 الفولت : ".($Voltage/10)." V%0D%0A")
+    :set Msg ($Msg.$alertBody."%0D%0A")
+    :set Msg ($Msg."🕒 ".$Time."%0D%0A")
+    :set Msg ($Msg."📅 ".$Date)
+
+    /tool fetch \
+    url=("https://api.telegram.org/bot".$botToken."/sendMessage") \
+    http-method=post \
+    http-data=("chat_id=".$chatId."&text=".$Msg) \
+    keep-result=no
+}
