@@ -1,0 +1,63 @@
+:local total 24
+:local up 0
+:local down 0
+
+:local downList ""
+
+:if ([/ping 10.10.0.4 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20وادي%20جعفر%20الرئيسي%20(10.10.0.4)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.10.0.7 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20سقام%20(10.10.0.7)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.10.1.109 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20عمارة%20انيس%20السويني%20(10.10.1.109)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.10.3.10 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20الحزام%20الأمني%20الرئيسي%20(10.10.3.10)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.10.4.24 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20خالد%20التركي%20الدهارش%20(10.10.4.24)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.10.4.49 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20الحمدني%20الدهارش%20(10.10.4.49)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.10.6.15 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20اكتوبر%20فندق%20السعيد%20(10.10.6.15)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.10.6.16 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20القرمشي%20(10.10.6.16)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.10.6.17 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20الكريمي%20اكتوبر%20(10.10.6.17)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.10.6.215 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20عند%20عبدالنبي%20اكتوبر%20(10.10.6.215)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.60.0.35 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20جبل%20الشبر%20الرئيسي%20كل%20المناطق%20(10.60.0.35)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.60.0.40 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20اكتوبر%20الرئيسي%20الحكومي%20(10.60.0.40)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.10.0.160 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20بشير%20الغيليات%20الرئيسي%20(10.10.0.160)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.10.0.16 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20رهوة%20قادش%20رئيسي%20(10.10.0.16)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.60.0.15 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20المهدي%20الذراحن%20(10.60.0.15)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.60.0.16 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20بن%20قاسم%20منقل%20(10.60.0.16)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.60.0.20 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20صلاح%20حكيم%20مفرق%20القراعي%20(10.60.0.20)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.60.0.25 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20ديوان%20القدمه%20الرئيسي%20(10.60.0.25)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.60.0.6 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20نعمان%20الرئيسي%20(10.60.0.6)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.60.0.8 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20الغراء%20الرئيسي%20(10.60.0.8)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.60.0.14 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20القراعي%20الرئيسي%20(10.60.0.14)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.60.0.30 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20البيت%20الرئيسي%20الكل%20بالكل%20(10.60.0.30)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.70.0.5 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20ديوان%20الجربه%20(10.70.0.5)") } else={ :set up ($up + 1) }
+
+:if ([/ping 10.70.0.4 count=2] = 0) do={ :set down ($down + 1); :set downList ($downList . "%0A-%20سوتش%20البيت%20الرئيسي%20الأسود%20(10.70.0.4)") } else={ :set up ($up + 1) }
+
+:local report ("تقرير%20جلاكسي%20نت%0A%0Aإجمالي%20السوتشات:%20" . $total . "%0Aالشغالة:%20" . $up . "%0Aالمتوقفة:%20" . $down)
+
+:if ($down > 0) do={
+    :set report ($report . "%0A%0Aالسوتشات%20المتوقفة:" . $downList)
+} else={
+    :set report ($report . "%0A%0Aجميع%20السوتشات%20تعمل%20بشكل%20طبيعي")
+}
+
+/tool fetch url=("https://api.telegram.org/bot5273707582:AAH3dKXvBxSd_7Ybp7q35NIaVlkiFFFRB8k/sendMessage?chat_id=-1001888595677&text=" . $report) keep-result=no
