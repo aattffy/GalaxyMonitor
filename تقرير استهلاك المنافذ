@@ -1,0 +1,152 @@
+# ====================================================
+# سكربت تقرير الميكروتك (الإجمالي لـ WAN2 و WAN5 فقط)
+# ====================================================
+
+# 1. جلب البيانات الأساسية
+:local sw [/system identity get name]
+:local reportDate [/system clock get date]
+:local reportTime [/system clock get time]
+
+# 2. تحويل الوقت لنظام 12 ساعة (ص / م)
+:local h [:tonum [:pick $reportTime 0 2]]
+:local m [:pick $reportTime 3 5]
+:local s [:pick $reportTime 6 8]
+:local ap "ص"
+
+:if ($h >= 12) do={ :set ap "م" }
+:if ($h = 0) do={ :set h 12 }
+:if ($h > 12) do={ :set h ($h - 12) }
+:set reportTime ($h . ":" . $m . ":" . $s . " " . $ap)
+
+# 3. تحويل مدة التشغيل لصيغة عربية كاملة
+:local up [/system resource get uptime]
+:local upFormatted ""
+:local dPos [:find $up "d"]
+
+:if ([:typeof $dPos] = "nil") do={
+    :local c1 [:find $up ":"]
+    :local c2 [:find $up ":" ($c1 + 1)]
+    :local h [:pick $up 0 $c1]
+    :local m [:pick $up ($c1 + 1) $c2]
+    :set upFormatted ($h . " ساعة و " . $m . " دقيقة")
+} else={
+    :local d [:pick $up 0 $dPos]
+    :local t [:pick $up ($dPos + 1) [:len $up]]
+    :local c1 [:find $t ":"]
+    :local c2 [:find $t ":" ($c1 + 1)]
+    :local h [:pick $t 0 $c1]
+    :local m [:pick $t ($c1 + 1) $c2]
+    :set upFormatted ($d . " يوم و " . $h . " ساعة")
+}
+
+# 4. بناء إطار المعلومات في أعلى التقرير
+:local msg "📊 *تـقـريـر استهلاك الرئيسي*"
+:set msg ($msg . "\n```")
+:set msg ($msg . "\n┌──────────────────────────────────┐")
+:set msg ($msg . "\n│ 🖥️ الجهاز : " . $sw)
+:set msg ($msg . "\n│ 📅 التاريخ: " . $reportDate . " (" . $reportTime . ")")
+:set msg ($msg . "\n│ ⏳ التشغيل: " . $upFormatted)
+:set msg ($msg . "\n└──────────────────────────────────┘")
+:set msg ($msg . "\n```")
+:set msg ($msg . "\n📋 *تـفـاصـيـل الـمـنـافـذ الـنـشـطـة:*")
+
+# 5. متغيرات الإجمالي الخاص بـ WAN2 و WAN5
+:local wanComboBytes 0
+:local summaryTable ""
+
+# 6. المرور على المنافذ الشغالة فقط (running=yes)
+:foreach i in=[/interface ethernet find running=yes] do={
+
+    :local name [/interface ethernet get $i name]
+    :local comment [/interface ethernet get $i comment]
+
+    :if ($comment="") do={ :set comment $name }
+
+    :local rx [/interface get $i rx-byte]
+    :local tx [/interface get $i tx-byte]
+
+    :local speed "-"
+    :set speed (([/interface ethernet monitor $name once as-value])->"rate")
+    :if ($speed="10Mbps") do={ :set speed "10 ميجا" }
+    :if ($speed="100Mbps") do={ :set speed "100 ميجا" }
+    :if ($speed="1Gbps") do={ :set speed "1 جيجا" }
+    :if ($speed="2.5Gbps") do={ :set speed "2.5 جيجا" }
+    :if ($speed="10Gbps") do={ :set speed "10 جيجا" }
+
+    :local linkDowns [/interface get $i link-downs]
+
+    # حساب إجمالي المنفذ
+    :local totalBytes ($rx + $tx)
+
+    # تجميع استهلاك WAN2 و WAN5 فقط للإجمالي الكلي
+    :if ($name = "wan2" || $name = "WAN2" || $name = "Wan2" || $name = "wan5" || $name = "WAN5" || $name = "Wan5") do={
+        :set wanComboBytes ($wanComboBytes + $totalBytes)
+    }
+
+    # تحويل البايت إلى (جيجابايت) أو (ميجابايت)
+    :local rxStr ""
+    :if ($rx >= 1073741824) do={
+        :set rxStr (($rx / 1073741824) . " جيجابايت")
+    } else={
+        :set rxStr (($rx / 1048576) . " ميجابايت")
+    }
+
+    :local txStr ""
+    :if ($tx >= 1073741824) do={
+        :set txStr (($tx / 1073741824) . " جيجابايت")
+    } else={
+        :set txStr (($tx / 1048576) . " ميجابايت")
+    }
+
+    :local totalStr ""
+    :if ($totalBytes >= 1073741824) do={
+        :set totalStr (($totalBytes / 1073741824) . " جيجابايت")
+    } else={
+        :set totalStr (($totalBytes / 1048576) . " ميجابايت")
+    }
+
+    # إضافة سطر في جدول الإجماليات للمنافذ النشطة
+    :set summaryTable ($summaryTable . "\n│ 🏷️ " . $comment . " 👈 " . $totalStr)
+
+    # إضافة كارت تفاصيل المنفذ النشط
+    :set msg ($msg . "\n\n🟢 *" . $name . "* ┊ 🏷️ `" . $comment . "`")
+    :set msg ($msg . "\n```")
+    :set msg ($msg . "\n├─ ⚡ السرعة  : " . $speed . " ┊ 📉 الفصل: " . $linkDowns)
+    :set msg ($msg . "\n├─ 📥 تنزيل   : " . $rxStr)
+    :set msg ($msg . "\n├─ 📤 رفع     : " . $txStr)
+    :set msg ($msg . "\n├─ 📦 الإجمالي : " . $totalStr)
+    :set msg ($msg . "\n└─ ⏱️ خلال    : " . $upFormatted)
+    :set msg ($msg . "\n```")
+}
+
+# 7. تحويل إجمالي مجموع الدخول (WAN2 + WAN5)
+:local wanComboStr ""
+:if ($wanComboBytes >= 1073741824) do={
+    :set wanComboStr (($wanComboBytes / 1073741824) . " جيجابايت")
+} else={
+    :set wanComboStr (($wanComboBytes / 1048576) . " ميجابايت")
+}
+
+# بناء جدول الإجماليات النهائي
+:set msg ($msg . "\n📈 *جدول الإجماليات والدمج:*")
+:set msg ($msg . "\n```")
+:set msg ($msg . "\n┌─────────────────────────────────────────┐")
+:set msg ($msg .$summaryTable)
+:set msg ($msg . "\n├─────────────────────────────────────────┤")
+:set msg ($msg . "\n│ 🌐 الإجمالي الكلي (WAN2 + WAN5) 👈 " . $wanComboStr)
+:set msg ($msg . "\n└─────────────────────────────────────────┘")
+:set msg ($msg . "\n```")
+
+# 8. إرسال الرسالة عبر التلجرام
+:local botToken "1616176114:AAFSF_ggM6IVDjjVBajpsN-wTHCd4_To2yc"
+:local chatId "968646268"
+
+:local urlData ("chat_id=" . $chatId . "&parse_mode=Markdown&text=" . $msg)
+
+/tool fetch \
+url="https://api.telegram.org/bot$botToken/sendMessage" \
+http-method=post \
+http-header-field="Content-Type: application/x-www-form-urlencoded" \
+http-data=$urlData \
+keep-result=no
+
